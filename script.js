@@ -46,10 +46,18 @@ function azioneCambiaStato(bottone, nomeProdotto) {
 // 4. Archivia (Ricevuto)
 function azioneRicevuto(bottone, nomeProdotto) {
     const li = bottone.parentElement;
+    
+    // Cambiamo lo stato in "Completato" sul foglio
     const url = `${SCRIPT_URL}?action=update&prodotto=${encodeURIComponent(nomeProdotto)}&stato=Completato`;
     
-    richiestaJSONP(url, () => {
+    // Disabilitiamo il bottone per evitare click multipli
+    bottone.disabled = true;
+    bottone.innerText = "...";
+
+    richiestaJSONP(url, (risultato) => {
+        // Rimuoviamo l'elemento dall'interfaccia
         li.remove();
+        console.log("Prodotto archiviato con successo");
     });
 }
 
@@ -97,3 +105,4 @@ document.getElementById('productInput').addEventListener('keypress', function (e
         aggiungiProdotto();
     }
 });
+
