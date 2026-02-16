@@ -89,4 +89,11 @@ function richiestaJSONP(url, callback) {
     const script = document.createElement('script');
     script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${callbackName}`;
     document.body.appendChild(script);
+
 }
+// Permette di premere INVIO per aggiungere il prodotto
+document.getElementById('productInput').addEventListener('keypress', function (e) {
+    if (e.key === 'Enter') {
+        aggiungiProdotto();
+    }
+});
