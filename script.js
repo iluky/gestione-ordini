@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwXcpZzp7rRTjiaQoAnGoa6vn6UE7CcmYk70lhmS_x-v57jDriksmhrONY9YMk_7hQ/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyIgYqSKkbH-o-PvMw72NilhOQ68N0kr8PliupNxSdMTQUBXDbvIQgPlj9ugRXhP0pQ/exec";
 
 const getDeviceType = () => {
     return /Mobile|Android|iP(hone|od)/.test(navigator.userAgent) ? "Smartphone" : "PC Desktop";
@@ -32,32 +32,36 @@ async function aggiungiProdotto() {
     });
 }
 
-// 3. Sposta in "Ordinati"
+// Sposta in "Ordinati" e aggiorna il Foglio
 function azioneCambiaStato(bottone, nomeProdotto) {
-    const li = bottone.parentElement;
     const url = `${SCRIPT_URL}?action=update&prodotto=${encodeURIComponent(nomeProdotto)}&stato=Ordinato`;
     
-    richiestaJSONP(url, () => {
-        li.remove();
-        aggiungiAListaOrdinati(nomeProdotto);
-    });
-}
-
-// 4. Archivia (Ricevuto)
-function azioneRicevuto(bottone, nomeProdotto) {
-    const li = bottone.parentElement;
-    
-    // Cambiamo lo stato in "Completato" sul foglio
-    const url = `${SCRIPT_URL}?action=update&prodotto=${encodeURIComponent(nomeProdotto)}&stato=Completato`;
-    
-    // Disabilitiamo il bottone per evitare click multipli
     bottone.disabled = true;
     bottone.innerText = "...";
 
     richiestaJSONP(url, (risultato) => {
-        // Rimuoviamo l'elemento dall'interfaccia
-        li.remove();
-        console.log("Prodotto archiviato con successo");
+        if (risultato.status === "updated") {
+            const li = bottone.parentElement;
+            li.remove();
+            aggiungiAListaOrdinati(nomeProdotto);
+        } else {
+            alert("Errore nell'aggiornamento del foglio");
+            bottone.disabled = false;
+            bottone.innerText = "Ordina ✅";
+        }
+    });
+}
+
+// Segna come "Completato" e sparisce dall'app
+function azioneRicevuto(bottone, nomeProdotto) {
+    const url = `${SCRIPT_URL}?action=update&prodotto=${encodeURIComponent(nomeProdotto)}&stato=Completato`;
+    
+    bottone.disabled = true;
+
+    richiestaJSONP(url, (risultato) => {
+        if (risultato.status === "updated") {
+            bottone.parentElement.remove();
+        }
     });
 }
 
@@ -105,6 +109,7 @@ document.getElementById('productInput').addEventListener('keypress', function (e
         aggiungiProdotto();
     }
 });
+
 
 
 
