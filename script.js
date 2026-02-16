@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbznXYpXVd7G7rs9b_5H-q7yylAvYkFqghUQoY__uKWZn7CTojH6jAckEbvzUB5DIA_Z/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxwXcpZzp7rRTjiaQoAnGoa6vn6UE7CcmYk70lhmS_x-v57jDriksmhrONY9YMk_7hQ/exec";
 
 const getDeviceType = () => {
     return /Mobile|Android|iP(hone|od)/.test(navigator.userAgent) ? "Smartphone" : "PC Desktop";
@@ -105,5 +105,6 @@ document.getElementById('productInput').addEventListener('keypress', function (e
         aggiungiProdotto();
     }
 });
+
 
 
