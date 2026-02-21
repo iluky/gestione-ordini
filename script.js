@@ -1,71 +1,62 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyIgYqSKkbH-o-PvMw72NilhOQ68N0kr8PliupNxSdMTQUBXDbvIQgPlj9ugRXhP0pQ/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybEpVSj9brXjcaw2YYTQpRNYPWE1n6vUkkdUPbT-87bXtZb_Jl5bvSeLWLjh-TQFve/exec";
 
-const getDeviceType = () => {
-    return /Mobile|Android|iP(hone|od)/.test(navigator.userAgent) ? "Smartphone" : "PC Desktop";
-};
+const getDeviceType = () => /Mobile|Android|iP(hone|od)/.test(navigator.userAgent) ? "Smartphone" : "PC Desktop";
 
-// 1. Caricamento iniziale
+function formattaData(isoString) {
+    const d = new Date(isoString);
+    if (isNaN(d)) return "";
+    return `${d.getDate()}/${d.getMonth() + 1} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
+}
+
 window.onload = () => {
-    richiestaJSONP(`${SCRIPT_URL}?action=read`, (dati) => {
+    richiestaJSONP(`${SCRIPT_URL}?action=read_all`, (dati) => {
         document.getElementById('loading-msg').style.display = 'none';
         dati.forEach(riga => {
+            const dataStr = formattaData(riga[0]);
             if (riga[3] === "Da Ordinare") creaElementoLista(riga[1], riga[2]);
-            else if (riga[3] === "Ordinato") aggiungiAListaOrdinati(riga[1]);
+            else if (riga[3] === "Ordinato") aggiungiAListaOrdinati(riga[1], dataStr);
+            else if (riga[3] === "Completato") aggiungiAStorico(riga[1], dataStr);
         });
     });
 };
 
-// 2. Aggiunta prodotto
-async function aggiungiProdotto() {
+document.getElementById('productInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') aggiungiProdotto(); });
+
+function aggiungiProdotto() {
     const input = document.getElementById('productInput');
     const nome = input.value.trim();
     if (!nome) return;
-
     input.disabled = true;
-    const disp = getDeviceType();
-    const url = `${SCRIPT_URL}?action=write&prodotto=${encodeURIComponent(nome)}&dispositivo=${encodeURIComponent(disp)}`;
-
-    richiestaJSONP(url, (risultato) => {
-        creaElementoLista(nome, risultato.categoria || "Generico");
+    const url = `${SCRIPT_URL}?action=write&prodotto=${encodeURIComponent(nome)}&dispositivo=${encodeURIComponent(getDeviceType())}`;
+    richiestaJSONP(url, (res) => {
+        creaElementoLista(nome, res.categoria || "Generico");
         input.disabled = false;
         input.value = "";
     });
 }
 
-// Sposta in "Ordinati" e aggiorna il Foglio
-function azioneCambiaStato(bottone, nomeProdotto) {
-    const url = `${SCRIPT_URL}?action=update&prodotto=${encodeURIComponent(nomeProdotto)}&stato=Ordinato`;
-    
+function azioneCambiaStato(bottone, nome) {
+    const url = `${SCRIPT_URL}?action=update&prodotto=${encodeURIComponent(nome)}&stato=Ordinato`;
     bottone.disabled = true;
-    bottone.innerText = "...";
-
-    richiestaJSONP(url, (risultato) => {
-        if (risultato.status === "updated") {
-            const li = bottone.parentElement;
-            li.remove();
-            aggiungiAListaOrdinati(nomeProdotto);
-        } else {
-            alert("Errore nell'aggiornamento del foglio");
-            bottone.disabled = false;
-            bottone.innerText = "Ordina ✅";
-        }
-    });
-}
-
-// Segna come "Completato" e sparisce dall'app
-function azioneRicevuto(bottone, nomeProdotto) {
-    const url = `${SCRIPT_URL}?action=update&prodotto=${encodeURIComponent(nomeProdotto)}&stato=Completato`;
-    
-    bottone.disabled = true;
-
-    richiestaJSONP(url, (risultato) => {
-        if (risultato.status === "updated") {
+    richiestaJSONP(url, (res) => {
+        if (res.found) {
             bottone.parentElement.remove();
+            aggiungiAListaOrdinati(nome, formattaData(new Date()));
         }
     });
 }
 
-// Helper: Crea UI "Da Ordinare"
+function azioneRicevuto(bottone, nome) {
+    const url = `${SCRIPT_URL}?action=update&prodotto=${encodeURIComponent(nome)}&stato=Completato`;
+    bottone.disabled = true;
+    richiestaJSONP(url, (res) => {
+        if (res.found) {
+            bottone.parentElement.parentElement.remove();
+            aggiungiAStorico(nome, formattaData(new Date()));
+        }
+    });
+}
+
 function creaElementoLista(nome, categoria) {
     const contenitore = document.getElementById('listaCategorie');
     let divCat = document.getElementById(`cat-${categoria}`);
@@ -81,35 +72,32 @@ function creaElementoLista(nome, categoria) {
     document.getElementById(`ul-${categoria}`).appendChild(li);
 }
 
-// Helper: Crea UI "Ordinati"
-function aggiungiAListaOrdinati(nome) {
-    const listaOrdinati = document.getElementById('listaOrdinati');
+function aggiungiAListaOrdinati(nome, dataStr) {
     const li = document.createElement('li');
-    li.innerHTML = `<span style="text-decoration:line-through; color:gray;">${nome}</span>
+    li.innerHTML = `<div class="info-prod"><span style="text-decoration:line-through;color:gray">${nome}</span><span class="data-label">Ord: ${dataStr}</span></div>
                     <button class="btn-elimina" onclick="azioneRicevuto(this, '${nome}')">Ricevuto 📦</button>`;
-    listaOrdinati.appendChild(li);
+    document.getElementById('listaOrdinati').appendChild(li);
 }
 
-// Funzione JSONP universale
+function aggiungiAStorico(nome, dataStr) {
+    const li = document.createElement('li');
+    li.style.background = "#f1f3f5";
+    li.innerHTML = `<span>${nome}</span><span class="data-label">Fatto: ${dataStr}</span>`;
+    document.getElementById('listaArchivio').appendChild(li);
+}
+
+function toggleArchivio() {
+    const sez = document.getElementById('sezioneArchivio');
+    const btn = document.getElementById('btnArchivio');
+    const isHidden = sez.style.display === "none";
+    sez.style.display = isHidden ? "block" : "none";
+    btn.innerText = isHidden ? "Nascondi Storico" : "Mostra Storico Ricevuti";
+}
+
 function richiestaJSONP(url, callback) {
-    const callbackName = 'jsonp_' + Math.round(100000 * Math.random());
-    window[callbackName] = (data) => {
-        delete window[callbackName];
-        document.body.removeChild(script);
-        callback(data);
-    };
+    const name = 'jsonp_' + Math.round(100000 * Math.random());
+    window[name] = (data) => { delete window[name]; document.body.removeChild(script); callback(data); };
     const script = document.createElement('script');
-    script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${callbackName}`;
+    script.src = `${url}${url.includes('?') ? '&' : '?'}callback=${name}`;
     document.body.appendChild(script);
-
 }
-// Permette di premere INVIO per aggiungere il prodotto
-document.getElementById('productInput').addEventListener('keypress', function (e) {
-    if (e.key === 'Enter') {
-        aggiungiProdotto();
-    }
-});
-
-
-
-
