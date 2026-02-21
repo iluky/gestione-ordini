@@ -11,18 +11,26 @@
         <h1>📦 Ordine Merce</h1>
         
         <div class="input-section">
-            <input type="text" id="productInput" placeholder="Cosa manca? (es: Carta fotocopie)">
+            <input type="text" id="productInput" placeholder="Cosa manca?">
             <button onclick="aggiungiProdotto()">Aggiungi</button>
         </div>
 
         <h3>Da Ordinare</h3>
         <div id="listaCategorie">
-            <p id="loading-msg">Caricamento dati...</p>
+            <p id="loading-msg">Sincronizzazione in corso...</p>
         </div>
 
         <hr>
         <h3>In Arrivo (Ordinati)</h3>
         <ul id="listaOrdinati"></ul>
+
+        <hr>
+        <button id="btnArchivio" onclick="toggleArchivio()" class="btn-secondary">Mostra Storico Ricevuti</button>
+
+        <div id="sezioneArchivio" style="display: none; margin-top: 20px;">
+            <h3>Storico Completati</h3>
+            <ul id="listaArchivio"></ul>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
