@@ -2,26 +2,36 @@ const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbybEpVSj9brXjcaw2YYT
 
 const getDeviceType = () => /Mobile|Android|iP(hone|od)/.test(navigator.userAgent) ? "Smartphone" : "PC Desktop";
 
+// Funzione per formattare la data in modo leggibile
 function formattaData(isoString) {
     const d = new Date(isoString);
-    if (isNaN(d)) return "";
+    if (isNaN(d)) return "Data n.d.";
     return `${d.getDate()}/${d.getMonth() + 1} ${d.getHours()}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
+// Caricamento iniziale dei dati
 window.onload = () => {
     richiestaJSONP(`${SCRIPT_URL}?action=read_all`, (dati) => {
         document.getElementById('loading-msg').style.display = 'none';
         dati.forEach(riga => {
             const dataStr = formattaData(riga[0]);
-            if (riga[3] === "Da Ordinare") creaElementoLista(riga[1], riga[2]);
-            else if (riga[3] === "Ordinato") aggiungiAListaOrdinati(riga[1], dataStr);
-            else if (riga[3] === "Completato") aggiungiAStorico(riga[1], dataStr);
+            if (riga[3] === "Da Ordinare") {
+                creaElementoLista(riga[1], riga[2]);
+            } else if (riga[3] === "Ordinato") {
+                aggiungiAListaOrdinati(riga[1], dataStr);
+            } else if (riga[3] === "Completato") {
+                aggiungiAStorico(riga[1], dataStr);
+            }
         });
     });
 };
 
-document.getElementById('productInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') aggiungiProdotto(); });
+// Invio con tasto Enter
+document.getElementById('productInput').addEventListener('keypress', (e) => { 
+    if (e.key === 'Enter') aggiungiProdotto(); 
+});
 
+// Aggiunta nuovo prodotto
 function aggiungiProdotto() {
     const input = document.getElementById('productInput');
     const nome = input.value.trim();
@@ -35,23 +45,28 @@ function aggiungiProdotto() {
     });
 }
 
+// Passaggio da "Da Ordinare" a "Ordinato"
 function azioneCambiaStato(bottone, nome) {
     const url = `${SCRIPT_URL}?action=update&prodotto=${encodeURIComponent(nome)}&stato=Ordinato`;
     bottone.disabled = true;
     richiestaJSONP(url, (res) => {
         if (res.found) {
             bottone.parentElement.remove();
+            // Aggiungiamo la data corrente per la sezione "In Arrivo"
             aggiungiAListaOrdinati(nome, formattaData(new Date()));
         }
     });
 }
 
+// Passaggio da "Ordinato" a "Completato" (Sparisce e va in archivio)
 function azioneRicevuto(bottone, nome) {
     const url = `${SCRIPT_URL}?action=update&prodotto=${encodeURIComponent(nome)}&stato=Completato`;
     bottone.disabled = true;
     richiestaJSONP(url, (res) => {
         if (res.found) {
-            bottone.parentElement.parentElement.remove();
+            // Rimuove l'elemento dalla lista "In Arrivo"
+            bottone.parentElement.remove();
+            // Lo aggiunge allo storico (visibile solo se l'archivio è aperto)
             aggiungiAStorico(nome, formattaData(new Date()));
         }
     });
@@ -74,15 +89,25 @@ function creaElementoLista(nome, categoria) {
 
 function aggiungiAListaOrdinati(nome, dataStr) {
     const li = document.createElement('li');
-    li.innerHTML = `<div class="info-prod"><span style="text-decoration:line-through;color:gray">${nome}</span><span class="data-label">Ord: ${dataStr}</span></div>
-                    <button class="btn-elimina" onclick="azioneRicevuto(this, '${nome}')">Ricevuto 📦</button>`;
+    li.innerHTML = `
+        <div class="info-prod">
+            <span style="text-decoration:line-through; color:gray; font-weight:bold;">${nome}</span>
+            <span class="data-label">Ordinato il: ${dataStr}</span>
+        </div>
+        <button class="btn-elimina" onclick="azioneRicevuto(this, '${nome}')">Ricevuto 📦</button>
+    `;
     document.getElementById('listaOrdinati').appendChild(li);
 }
 
 function aggiungiAStorico(nome, dataStr) {
     const li = document.createElement('li');
     li.style.background = "#f1f3f5";
-    li.innerHTML = `<span>${nome}</span><span class="data-label">Fatto: ${dataStr}</span>`;
+    li.style.flexDirection = "column";
+    li.style.alignItems = "flex-start";
+    li.innerHTML = `
+        <span style="font-weight:bold;">${nome}</span>
+        <span class="data-label">Completato il: ${dataStr}</span>
+    `;
     document.getElementById('listaArchivio').appendChild(li);
 }
 
