@@ -1,9 +1,10 @@
 const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxGPGkM61evA5quGZ5JJfnON7f5FcOINwcoMMN8MvZeWlYjlfSm4WAJJRITXqacJxPS/exec";
+const SCRIPT_URL = "INSERISCI_URL_EXEC_QUI";
 let fotoBase64 = "";
 
 const getDevice = () => /Mobile|Android|iP(hone|od)/.test(navigator.userAgent) ? "Smartphone" : "PC Desktop";
 
-// Gestione Foto
+// Gestione Foto e Anteprima
 document.getElementById('photoInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -24,23 +25,29 @@ function cancellaFoto() {
 
 // Caricamento Dati (GET)
 async function caricaDati() {
-    document.getElementById('listaCategorie').innerHTML = "Sincronizzazione...";
-    const res = await fetch(SCRIPT_URL);
-    const dati = await res.json();
+    const loading = document.getElementById('listaCategorie');
+    loading.innerHTML = "<p>Sincronizzazione...</p>";
     
-    document.getElementById('listaCategorie').innerHTML = "";
-    document.getElementById('listaOrdinati').innerHTML = "";
-    document.getElementById('listaArchivio').innerHTML = "";
+    try {
+        const res = await fetch(SCRIPT_URL);
+        const dati = await res.json();
+        
+        loading.innerHTML = "";
+        document.getElementById('listaOrdinati').innerHTML = "";
+        document.getElementById('listaArchivio').innerHTML = "";
 
-    dati.forEach(r => {
-        const dataStr = new Date(r[0]).toLocaleString('it-IT', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-        if (r[3] === "Da Ordinare") creaElementoLista(r[1], r[2], r[5]);
-        else if (r[3] === "Ordinato") aggiungiAOrdinati(r[1], dataStr, r[5]);
-        else if (r[3] === "Completato") aggiungiAArchivio(r[1], dataStr);
-    });
+        dati.forEach(r => {
+            const dataStr = new Date(r[0]).toLocaleString('it-IT', {day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+            if (r[3] === "Da Ordinare") creaElementoLista(r[1], r[2], r[5]);
+            else if (r[3] === "Ordinato") aggiungiAOrdinati(r[1], dataStr, r[5]);
+            else if (r[3] === "Completato") aggiungiAArchivio(r[1], dataStr, r[5]);
+        });
+    } catch (err) {
+        loading.innerHTML = "<p style='color:red'>Errore connessione. Verifica URL.</p>";
+    }
 }
 
-// Invio Dati (POST)
+// Invio Prodotto (POST)
 async function aggiungiProdotto() {
     const nome = document.getElementById('productInput').value.trim();
     if (!nome) return;
@@ -65,7 +72,6 @@ async function cambiaStato(nome, nuovoStato) {
     caricaDati();
 }
 
-// Interfaccia
 function creaElementoLista(nome, cat, foto) {
     let box = document.getElementById(`cat-${cat}`);
     if (!box) {
@@ -73,24 +79,28 @@ function creaElementoLista(nome, cat, foto) {
         box = document.getElementById(`cat-${cat}`);
     }
     const li = document.createElement('li');
-    li.innerHTML = `<div class="info-prod">${foto ? `<img src="${foto}" class="img-mini">` : ''}<span>${nome}</span></div>
-                    <button onclick="cambiaStato('${nome}', 'Ordinato')" style="background:#ffc107">Ordina</button>`;
+    li.innerHTML = `<div class="info-prod">${foto ? `<img src="${foto}" class="img-mini" onclick="window.open(this.src)">` : ''}<span>${nome}</span></div>
+                    <button onclick="cambiaStato('${nome}', 'Ordinato')" class="btn-action" style="background:#ffc107; width:60px">Ordina</button>`;
     document.getElementById(`ul-${cat}`).appendChild(li);
 }
 
 function aggiungiAOrdinati(nome, data, foto) {
     const li = document.createElement('li');
-    li.innerHTML = `<div class="info-prod">${foto ? `<img src="${foto}" class="img-mini">` : ''}
-                    <div><b>${nome}</b><br><span class="data-label">${data}</span></div></div>
+    li.innerHTML = `<div class="info-prod">${foto ? `<img src="${foto}" class="img-mini" onclick="window.open(this.src)">` : ''}
+                    <div><b>${nome}</b><span class="data-label">${data}</span></div></div>
                     <div style="display:flex; gap:5px">
-                        <button onclick="cambiaStato('${nome}', 'Da Ordinare')">↩️</button>
-                        <button onclick="cambiaStato('${nome}', 'Completato')" style="background:#dc3545; color:white">Ricevuto</button>
+                        <button onclick="cambiaStato('${nome}', 'Da Ordinare')" class="btn-action" style="background:#eee; width:40px">↩️</button>
+                        <button onclick="cambiaStato('${nome}', 'Completato')" class="btn-action" style="background:#dc3545; color:white; width:70px">Ricevuto</button>
                     </div>`;
     document.getElementById('listaOrdinati').appendChild(li);
 }
 
-function aggiungiAArchivio(nome, data) {
-    document.getElementById('listaArchivio').innerHTML += `<li><span>${nome}</span><span class="data-label">${data}</span></li>`;
+function aggiungiAArchivio(nome, data, foto) {
+    const li = document.createElement('li');
+    li.style.background = "#f8f9fa";
+    li.innerHTML = `<div class="info-prod">${foto ? `<img src="${foto}" class="img-mini" style="filter:grayscale(1)">` : ''}
+                    <div><span>${nome}</span><span class="data-label">Chiuso: ${data}</span></div></div>`;
+    document.getElementById('listaArchivio').appendChild(li);
 }
 
 function toggleArchivio() {
