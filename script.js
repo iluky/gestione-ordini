@@ -1,4 +1,4 @@
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxcwIKyGQ_YAmJtxBmJguct6RxhUy7l6ws56xf8Ozafz0opUQy5gd4FKvneJs2RRiPc/exec";
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwL1MUarbbSvKv59bHqkXrndfNIjQx3INkUYXtA7L92qpNRTmZmQFJx7Lhxqn1ckeHF/exec";
 let fotoBase64 = "";
 
 const getDevice = () => /Mobile|Android|iP(hone|od)/.test(navigator.userAgent) ? "Smartphone" : "PC Desktop";
@@ -120,3 +120,4 @@ function toggleArchivio() {
 }
 
 window.onload = caricaDati;
+
