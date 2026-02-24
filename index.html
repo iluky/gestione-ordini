@@ -15,21 +15,20 @@
         
         <div class="input-group">
             <input type="text" id="productInput" placeholder="Cosa manca?">
-            <label class="btn-action btn-camera">
+            <label class="btn-camera">
                 📷 <input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
             </label>
-            <button onclick="aggiungiProdotto()" id="btnInvio" class="btn-action btn-add">Aggiungi</button>
+            <button onclick="aggiungiProdotto()" id="btnInvio" class="btn-add">Aggiungi</button>
         </div>
 
         <div id="preview-container" class="preview-box" style="display:none">
-            <p>Anteprima Foto:</p>
             <img id="photoPreview" src="">
-            <button onclick="cancellaFoto()" class="btn-cancel">Cancella Foto</button>
+            <button onclick="cancellaFoto()" class="btn-cancel">Elimina Foto</button>
         </div>
 
         <div id="main-content">
             <h3>🛒 Da Ordinare</h3>
-            <div id="listaCategorie"><p class="loading">Caricamento...</p></div>
+            <div id="listaCategorie"><p class="status-msg">Inizializzazione...</p></div>
 
             <h3>🚚 In Arrivo</h3>
             <ul id="listaOrdinati"></ul>
