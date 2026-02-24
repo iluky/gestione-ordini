@@ -3,38 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Gestione Ordini Merce</title>
+    <title>Gestione Ordini</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="container">
         <div class="header">
             <h1>📦 Ordine Merce</h1>
-            <button onclick="caricaDati()" class="btn-icon">🔄</button>
+            <button onclick="caricaDati()" class="btn-sync">🔄 Sincronizza</button>
         </div>
         
-        <div class="input-section">
+        <div class="input-group">
             <input type="text" id="productInput" placeholder="Cosa manca?">
-            <label class="btn-photo">📷
-                <input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
+            <label class="btn-action btn-camera">
+                📷 <input type="file" id="photoInput" accept="image/*" capture="environment" hidden>
             </label>
-            <button onclick="aggiungiProdotto()" id="btnInvio">Aggiungi</button>
+            <button onclick="aggiungiProdotto()" id="btnInvio" class="btn-action btn-add">Aggiungi</button>
         </div>
 
         <div id="preview-container" class="preview-box" style="display:none">
+            <p>Anteprima Foto:</p>
             <img id="photoPreview" src="">
-            <button onclick="cancellaFoto()">Annulla Foto</button>
+            <button onclick="cancellaFoto()" class="btn-cancel">Cancella Foto</button>
         </div>
 
-        <h3>Da Ordinare</h3>
-        <div id="listaCategorie"><p>Caricamento...</p></div>
+        <div id="main-content">
+            <h3>🛒 Da Ordinare</h3>
+            <div id="listaCategorie"><p class="loading">Caricamento...</p></div>
 
-        <hr>
-        <h3>In Arrivo</h3>
-        <ul id="listaOrdinati"></ul>
+            <h3>🚚 In Arrivo</h3>
+            <ul id="listaOrdinati"></ul>
 
-        <button onclick="toggleArchivio()" class="btn-secondary">Mostra Storico</button>
-        <div id="sezioneArchivio" style="display:none"><ul id="listaArchivio"></ul></div>
+            <button onclick="toggleArchivio()" class="btn-history">Mostra Storico Ricevuti</button>
+            <div id="sezioneArchivio" style="display:none">
+                <ul id="listaArchivio"></ul>
+            </div>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>
